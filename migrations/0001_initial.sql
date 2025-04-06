@@ -1,14 +1,98 @@
 -- Initial database schema for Allied Health Business Assessment Tool
 -- This will be used with Supabase/PostgreSQL
 
--- Enable Row Level Security
-ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
+-- Create supabase_admin role with superuser privileges
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'supabase_admin') THEN
+    CREATE ROLE supabase_admin LOGIN SUPERUSER;
+  END IF;
+END
+$$;
 
--- Create schema
+-- Enable required extensions
+ALTER DATABASE postgres SET timezone TO 'UTC';
+
+-- Create schemas
 CREATE SCHEMA IF NOT EXISTS public;
+CREATE SCHEMA IF NOT EXISTS auth;
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA public;
+
+-- Create auth schema functions
+CREATE OR REPLACE FUNCTION auth.uid() 
+RETURNS UUID AS $$
+BEGIN
+  RETURN coalesce(
+    current_setting('request.jwt.claim.sub', true),
+    (current_setting('request.jwt.claims', true)::jsonb->>'sub')
+  )::UUID;
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN NULL;
+END
+$$ LANGUAGE plpgsql STABLE;
+
+-- Create auth.users table
+CREATE TABLE IF NOT EXISTS auth.users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email TEXT UNIQUE NOT NULL,
+    encrypted_password TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Create users table
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Enable Row Level Security
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DO $$ 
+BEGIN
+  DROP POLICY IF EXISTS "Users can view their own data" ON public.users;
+  DROP POLICY IF EXISTS "Users can update their own data" ON public.users;
+EXCEPTION
+  WHEN undefined_object THEN
+    NULL;
+END
+$$;
+
+-- Create policies
+CREATE POLICY "Users can view their own data" 
+    ON public.users FOR SELECT 
+    USING (auth.uid() = id);
+
+CREATE POLICY "Users can update their own data" 
+    ON public.users FOR UPDATE 
+    USING (auth.uid() = id);
+
+-- Create function to handle user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.users (id, email)
+    VALUES (new.id, new.email);
+    RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
+-- Create trigger for new user creation
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Users table (extends Supabase auth users)
 CREATE TABLE IF NOT EXISTS users (

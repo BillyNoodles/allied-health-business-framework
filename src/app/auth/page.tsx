@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AuthError } from '@supabase/supabase-js';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -15,60 +16,87 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lastSignupAttempt, setLastSignupAttempt] = useState(0);
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    // Check if enough time has passed since last attempt
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastSignupAttempt;
+    if (timeSinceLastAttempt < 35000) { // 35 seconds
+      setError(`Please wait ${Math.ceil((35000 - timeSinceLastAttempt) / 1000)} seconds before trying again`);
+      setLoading(false);
+      return;
+    }
+
     try {
+      setLastSignupAttempt(now);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('security purposes')) {
+          throw new Error('Please wait a moment before trying again');
+        }
+        throw error;
+      }
       
       if (data?.user) {
-        // Create user profile in users table
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            { 
-              id: data.user.id,
-              email: data.user.email,
-            }
-          ]);
-          
-        if (profileError) throw profileError;
+        // Check if email confirmation is required
+        if (data.session === null) {
+          setError('Please check your email for a confirmation link');
+          return;
+        }
         
         router.push('/onboarding');
       }
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      console.error('Sign up error:', err);
+      const error = err as Error | AuthError;
+      if (error.message.includes('404')) {
+        setError('Unable to create profile. Please try again later.');
+      } else {
+        setError(error.message || 'An error occurred during sign up');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignIn = async (e) => {
+  const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
+      console.log('Starting sign in process...');
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Sign in response:', { data, error });
+
       if (error) throw error;
       
       if (data?.user) {
+        console.log('Sign in successful, redirecting...');
         router.push('/dashboard');
       }
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      console.error('Sign in error:', err);
+      const error = err as Error | AuthError;
+      setError(error.message || 'An error occurred during sign in');
     } finally {
       setLoading(false);
     }
@@ -94,9 +122,9 @@ export default function AuthPage() {
             <form onSubmit={handleSignIn}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="signin-email">Email</Label>
                   <Input
-                    id="email"
+                    id="signin-email"
                     type="email"
                     placeholder="m.smith@example.com"
                     value={email}
@@ -105,9 +133,9 @@ export default function AuthPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signin-password">Password</Label>
                   <Input
-                    id="password"
+                    id="signin-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -131,9 +159,9 @@ export default function AuthPage() {
             <form onSubmit={handleSignUp}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="signup-email">Email</Label>
                   <Input
-                    id="email"
+                    id="signup-email"
                     type="email"
                     placeholder="m.smith@example.com"
                     value={email}
@@ -142,9 +170,9 @@ export default function AuthPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signup-password">Password</Label>
                   <Input
-                    id="password"
+                    id="signup-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
