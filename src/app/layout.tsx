@@ -1,179 +1,79 @@
-'use client';
+import React from 'react';
+import './globals.css';
 
-import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import Link from 'next/link';
-
-function MainLayout({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (data?.session?.user) {
-        setUser(data.session.user);
-      }
-      setLoading(false);
-    };
-
-    checkUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      if (authListener?.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-    };
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold">
-            Allied Health Assessment
-          </Link>
-          
-          <div className="hidden md:flex items-center space-x-6">
-            {!loading && (
-              user ? (
-                <>
-                  <Link href="/dashboard" className="text-sm font-medium">
-                    Dashboard
-                  </Link>
-                  <Link href="/assessment" className="text-sm font-medium">
-                    Assessment
-                  </Link>
-                  <Link href="/results" className="text-sm font-medium">
-                    Results
-                  </Link>
-                  <Button variant="outline" size="sm" onClick={handleSignOut}>
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link href="/#features" className="text-sm font-medium">
-                    Features
-                  </Link>
-                  <Link href="/auth" className="text-sm font-medium">
-                    <Button size="sm">
-                      Sign In
-                    </Button>
-                  </Link>
-                </>
-              )
-            )}
-          </div>
-          
-          <button 
-            className="md:hidden"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {menuOpen ? (
-                <path d="M18 6L6 18M6 6l12 12" />
-              ) : (
-                <path d="M3 12h18M3 6h18M3 18h18" />
-              )}
-            </svg>
-          </button>
-        </div>
-        
-        {menuOpen && (
-          <div className="md:hidden border-t">
-            <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-              {user ? (
-                <>
-                  <Link href="/dashboard" className="text-sm font-medium">
-                    Dashboard
-                  </Link>
-                  <Link href="/assessment" className="text-sm font-medium">
-                    Assessment
-                  </Link>
-                  <Link href="/results" className="text-sm font-medium">
-                    Results
-                  </Link>
-                  <Button variant="outline" size="sm" onClick={handleSignOut}>
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link href="/#features" className="text-sm font-medium">
-                    Features
-                  </Link>
-                  <Link href="/auth" className="text-sm font-medium">
-                    <Button size="sm">
-                      Sign In
-                    </Button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </header>
-      
-      <main className="flex-1">
-        {children}
-      </main>
-      
-      <footer className="border-t">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <p className="text-sm text-gray-500">
-                © 2025 Allied Health Business Assessment Tool
-              </p>
-            </div>
-            <div className="flex space-x-6">
-              <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-900">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-900">
-                Terms of Service
-              </Link>
-              <Link href="/contact" className="text-sm text-gray-500 hover:text-gray-900">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <MainLayout>{children}</MainLayout>
+      <head>
+        <title>Allied Health Business Assessment Tool</title>
+        <meta name="description" content="A comprehensive solution for physiotherapy practices to analyze business operations, identify improvement opportunities, and enhance practice performance." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <div className="min-h-screen flex flex-col">
+          {/* Header/Navigation */}
+          <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div className="container mx-auto px-4">
+              <div className="flex justify-between items-center h-16">
+                <div className="flex items-center">
+                  <a href="/" className="font-bold text-xl text-blue-600">
+                    Allied Health Assessment
+                  </a>
+                </div>
+                
+                <nav className="hidden md:flex space-x-8">
+                  <a href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    Dashboard
+                  </a>
+                  <a href="/assessment" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    Assessment
+                  </a>
+                  <a href="/results" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    Results
+                  </a>
+                  <a href="/sop-generator" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    SOP Generator
+                  </a>
+                </nav>
+                
+                <div className="flex items-center space-x-4">
+                  <a href="/auth" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2">
+                    Sign In
+                  </a>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-grow">
+            {children}
+          </main>
+
+          {/* Footer */}
+          <footer className="bg-gray-100 py-6 border-t border-gray-200">
+            <div className="container mx-auto px-4">
+              <div className="flex flex-col md:flex-row justify-between items-center">
+                <div className="mb-4 md:mb-0">
+                  <p className="text-sm text-gray-600">
+                    © 2025 Allied Health Business Assessment Tool
+                  </p>
+                </div>
+                <div className="flex space-x-6">
+                  <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                    Privacy Policy
+                  </a>
+                  <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                    Terms of Service
+                  </a>
+                  <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                    Contact
+                  </a>
+                </div>
+              </div>
+            </div>
+          </footer>
+        </div>
       </body>
     </html>
   );
