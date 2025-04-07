@@ -1,53 +1,121 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=production
-        - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54331
-        - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54331
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "3000"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+  studio:
+    container_name: supabase-studio
+    image: supabase/studio:latest
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    # Optional: Add resource limits
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '1'
-    #       memory: 1G
-    depends_on:
-      db:
-        condition: service_healthy
+    ports:
+      - "54324:3000"
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DEFAULT_ORGANIZATION: Default Organization
+      DEFAULT_PROJECT: Default Project
+
+  kong:
+    container_name: supabase-kong
+    image: kong:2.8.1
+    restart: unless-stopped
+    ports:
+      - "54321:8000"
+      - "54320:8001"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+    volumes:
+      - ./volumes/api:/var/lib/kong
+
+  auth:
+    container_name: supabase-auth
+    image: supabase/gotrue:latest
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:54321
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_HOST: db
+      GOTRUE_DB_PORT: 5432
+      GOTRUE_DB_NAME: ${POSTGRES_DB}
+      GOTRUE_DB_USER: postgres
+      GOTRUE_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: false
+      GOTRUE_MAILER_AUTOCONFIRM: true
+      GOTRUE_SMS_AUTOCONFIRM: true
+
+  rest:
+    container_name: supabase-rest
+    image: postgrest/postgrest:latest
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      PGRST_DB_SCHEMA: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  meta:
+    container_name: supabase-meta
+    image: supabase/postgres-meta:latest
+    restart: unless-stopped
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
 
   db:
-    image: postgres:15-alpine
+    container_name: supabase-db
+    image: supabase/postgres:latest
+    restart: unless-stopped
     ports:
-      - "54333:5432"
+      - "54322:5432"
     environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ./migrations:/docker-entrypoint-initdb.d
-      - supabase-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - ./volumes/db/data:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations
+
+  storage:
+    container_name: supabase-storage
+    image: supabase/storage-api:latest
+    restart: unless-stopped
+    environment:
+      ANON_KEY: ${SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_KEY}
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+    volumes:
+      - ./volumes/storage:/var/lib/storage
+
+  app:
+    build: .
+    ports:
+      - "54325:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - studio
+      - rest
+      - db
 
 volumes:
-  supabase-db-data:
+  supabase-data:
