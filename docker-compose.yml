@@ -3,7 +3,7 @@ version: "3.8"
 services:
   studio:
     container_name: supabase-studio
-    image: supabase/studio:latest
+    image: supabase/studio:20240304-6a54d30
     restart: unless-stopped
     ports:
       - "54324:3000"
@@ -12,6 +12,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DEFAULT_ORGANIZATION: Default Organization
       DEFAULT_PROJECT: Default Project
+    depends_on:
+      - meta
+      - rest
 
   kong:
     container_name: supabase-kong
@@ -27,10 +30,14 @@ services:
       KONG_PLUGINS: request-transformer,cors,key-auth,acl
     volumes:
       - ./volumes/api:/var/lib/kong
+    depends_on:
+      - rest
+      - auth
+      - storage
 
   auth:
     container_name: supabase-auth
-    image: supabase/gotrue:latest
+    image: supabase/gotrue:v2.132.3
     restart: unless-stopped
     environment:
       GOTRUE_API_HOST: 0.0.0.0
@@ -49,10 +56,12 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: false
       GOTRUE_MAILER_AUTOCONFIRM: true
       GOTRUE_SMS_AUTOCONFIRM: true
+    depends_on:
+      - db
 
   rest:
     container_name: supabase-rest
-    image: postgrest/postgrest:latest
+    image: postgrest/postgrest:v12.0.1
     restart: unless-stopped
     environment:
       PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -60,19 +69,23 @@ services:
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
       PGRST_DB_USE_LEGACY_GUCS: "false"
+    depends_on:
+      - db
 
   meta:
     container_name: supabase-meta
-    image: supabase/postgres-meta:latest
+    image: supabase/postgres-meta:v0.75.0
     restart: unless-stopped
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: db
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      - db
 
   db:
     container_name: supabase-db
-    image: supabase/postgres:latest
+    image: supabase/postgres:15.1.0.148
     restart: unless-stopped
     ports:
       - "54322:5432"
@@ -85,7 +98,7 @@ services:
 
   storage:
     container_name: supabase-storage
-    image: supabase/storage-api:latest
+    image: supabase/storage-api:v0.43.11
     restart: unless-stopped
     environment:
       ANON_KEY: ${SUPABASE_ANON_KEY}
@@ -101,6 +114,9 @@ services:
       GLOBAL_S3_BUCKET: stub
     volumes:
       - ./volumes/storage:/var/lib/storage
+    depends_on:
+      - db
+      - rest
 
   app:
     build: .
@@ -116,6 +132,7 @@ services:
       - studio
       - rest
       - db
+      - kong
 
 volumes:
   supabase-data:
