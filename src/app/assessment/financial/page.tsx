@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { QuestionType } from '@/lib/models/QuestionType';
+import { QuestionType } from '@/models/QuestionType';
 
 export default function FinancialAssessment() {
   // Mock financial questions based on the structure from cursor-auto-rules-agile-workflow
@@ -92,7 +92,7 @@ export default function FinancialAssessment() {
   // Mock state for responses
   const [responses, setResponses] = React.useState<Record<string, string>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
-  
+
   const handleResponseChange = (questionId: string, value: string) => {
     setResponses(prev => ({
       ...prev,
@@ -148,9 +148,9 @@ export default function FinancialAssessment() {
         </CardHeader>
         <CardContent>
           <h3 className="text-lg font-medium mb-4">{currentQuestion.text}</h3>
-          
-          <RadioGroup 
-            value={responses[currentQuestion.id] || ''} 
+
+          <RadioGroup
+            value={responses[currentQuestion.id] || ''}
             onValueChange={(value) => handleResponseChange(currentQuestion.id, value)}
             className="space-y-3"
           >
@@ -177,21 +177,21 @@ export default function FinancialAssessment() {
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handlePrevious}
             disabled={currentQuestionIndex === 0}
           >
             Previous
           </Button>
           <div className="flex space-x-2">
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => {}}
+              onClick={() => { }}
             >
               Save & Exit
             </Button>
-            <Button 
+            <Button
               onClick={handleNext}
               disabled={!responses[currentQuestion.id] || currentQuestionIndex === mockQuestions.length - 1}
             >

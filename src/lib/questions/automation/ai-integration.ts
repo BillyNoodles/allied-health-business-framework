@@ -6,13 +6,13 @@
  * in leveraging artificial intelligence for healthcare operations and clinical support.
  */
 
-import { Question } from '../../../models/Question';
-import { QuestionType } from '../../../models/QuestionType';
-import { AssessmentCategory } from '../../../models/AssessmentCategory';
-import { DisciplineType } from '../../../models/DisciplineType';
-import { PracticeSize } from '../../../models/PracticeSize';
-import { ScorePosition } from '../../../models/ScorePosition';
-import { SOPType } from '../../../models/SOPType';
+import { Question } from '@/lib/models/Question';
+import { QuestionType } from '@/lib/models/QuestionType';
+import { AssessmentCategory } from '@/lib/models/AssessmentCategory';
+import { DisciplineType } from '@/lib/models/DisciplineType';
+import { PracticeSize } from '@/lib/models/PracticeSize';
+import { ScorePosition } from '@/lib/models/ScorePosition';
+import { SOPType } from '@/lib/models/SOPType';
 
 export const aiIntegrationQuestions: Question[] = [
   {
@@ -39,7 +39,7 @@ export const aiIntegrationQuestions: Question[] = [
     ],
     trackingPeriod: 'Quarterly',
     scoreInterpretation: {
-      [ScorePosition.CONCERNING]: {
+      [ScorePosition.CRITICAL]: {
         interpretation: 'Your practice is falling behind in clinical AI adoption',
         actionPrompts: [
           'Evaluate evidence-based AI clinical decision support tools',
@@ -164,7 +164,7 @@ export const aiIntegrationQuestions: Question[] = [
     ],
     trackingPeriod: 'Quarterly',
     scoreInterpretation: {
-      [ScorePosition.CONCERNING]: {
+      [ScorePosition.CRITICAL]: {
         interpretation: 'Your practice underutilizes virtual assistant technology',
         actionPrompts: [
           'Implement AI chatbot for appointment scheduling and FAQs',

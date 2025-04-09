@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { assessmentModules } from '@/lib/data/modules';
+import { assessmentModules } from '@/data/modules';
 import { AssessmentCategory } from '@/lib/models/AssessmentCategory';
 import { DisciplineType } from '@/lib/models/DisciplineType';
 
@@ -78,7 +78,7 @@ export default function Dashboard() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Practice Dashboard</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Business Health Score Card */}
         <Card className="md:col-span-1">
@@ -93,24 +93,24 @@ export default function Dashboard() {
                   <span className="text-4xl font-bold">{mockBusinessHealthScore.overall}</span>
                 </div>
                 <svg className="w-full h-full" viewBox="0 0 100 100">
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="45" 
-                    fill="none" 
-                    stroke="#e2e8f0" 
-                    strokeWidth="10" 
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#e2e8f0"
+                    strokeWidth="10"
                   />
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="45" 
-                    fill="none" 
-                    stroke="#3b82f6" 
-                    strokeWidth="10" 
-                    strokeDasharray="283" 
-                    strokeDashoffset={283 - (283 * mockBusinessHealthScore.overall / 100)} 
-                    transform="rotate(-90 50 50)" 
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="10"
+                    strokeDasharray="283"
+                    strokeDashoffset={283 - (283 * mockBusinessHealthScore.overall / 100)}
+                    transform="rotate(-90 50 50)"
                   />
                 </svg>
               </div>
@@ -139,7 +139,7 @@ export default function Dashboard() {
                 </div>
                 <Progress value={mockProgress.overall} className="h-2" />
               </div>
-              
+
               {assessmentModules.slice(0, 5).map(module => (
                 <div key={module.id}>
                   <div className="flex justify-between mb-1">
@@ -208,7 +208,7 @@ export default function Dashboard() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button 
+                <Button
                   className="w-full"
                   variant={mockProgress.modules[module.id] > 0 ? "default" : "outline"}
                 >
@@ -242,10 +242,10 @@ export default function Dashboard() {
                       </div>
                       <div>
                         <p className="text-sm">
-                          {score >= 80 ? 'Excellent' : 
-                           score >= 70 ? 'Good' : 
-                           score >= 60 ? 'Average' : 
-                           score >= 50 ? 'Fair' : 'Needs Improvement'}
+                          {score >= 80 ? 'Excellent' :
+                            score >= 70 ? 'Good' :
+                              score >= 60 ? 'Average' :
+                                score >= 50 ? 'Fair' : 'Needs Improvement'}
                         </p>
                         <Progress value={score} className="h-2 w-32 mt-1" />
                       </div>

@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { assessmentModules } from '@/lib/data/modules';
-import { AssessmentCategory } from '@/lib/models/AssessmentCategory';
+import { assessmentModules } from '@/data/modules';
+import { AssessmentCategory } from '@/models/AssessmentCategory';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase/client';
+import { getModuleQuestions } from '@/data/modules';
+import { saveAssessmentResponse } from '@/lib/supabase/db';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function AssessmentPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [assessmentId, setAssessmentId] = useState<string | null>(null);
+
   // Mock data for assessment progress
   const mockProgress = {
     overall: 42,
@@ -36,6 +47,100 @@ export default function AssessmentPage() {
 
   // Get unique categories for tabs
   const categories = Object.keys(modulesByCategory);
+
+  useEffect(() => {
+    async function loadModule() {
+      try {
+        setLoading(true);
+
+        // Get or create assessment
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) {
+          router.push('/auth');
+          return;
+        }
+
+        // Get or create assessment
+        const { data: assessmentData, error: assessmentError } = await supabase
+          .from('assessments')
+          .select('id')
+          .eq('user_id', userData.user.id)
+          .is('completed_at', null)
+          .single();
+
+        let currentAssessmentId;
+
+        if (assessmentError || !assessmentData) {
+          // Create new assessment
+          const { data: newAssessment, error: createError } = await supabase
+            .from('assessments')
+            .insert({ user_id: userData.user.id })
+            .select('id')
+            .single();
+
+          if (createError) throw createError;
+          currentAssessmentId = newAssessment.id;
+        } else {
+          currentAssessmentId = assessmentData.id;
+        }
+
+        setAssessmentId(currentAssessmentId);
+
+        // Load questions for this module
+        const moduleQuestions = getModuleQuestions(currentAssessmentId);
+        setQuestions(moduleQuestions);
+
+        // Load existing responses
+        const { data: responseData } = await supabase
+          .from('assessment_responses')
+          .select('question_id, response_value')
+          .eq('assessment_id', currentAssessmentId);
+
+        if (responseData) {
+          const responseMap = responseData.reduce((acc, item) => {
+            acc[item.question_id] = item.response_value;
+            return acc;
+          }, {} as Record<string, any>);
+
+          setResponses(responseMap);
+        }
+
+      } catch (error) {
+        console.error('Error loading module:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadModule();
+  }, [router]);
+
+  const handleResponseChange = async (questionId: string, value: any) => {
+    if (!assessmentId) return;
+
+    // Update local state
+    setResponses(prev => ({
+      ...prev,
+      [questionId]: value
+    }));
+
+    // Save to database
+    await saveAssessmentResponse(assessmentId, questionId, value);
+  };
+
+  const handleNext = () => {
+    // Navigate to next module or results page
+    // This would depend on your module sequence logic
+    router.push('/assessment');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -90,7 +195,7 @@ export default function AssessmentPage() {
             </TabsTrigger>
           ))}
         </TabsList>
-        
+
         {categories.map(category => (
           <TabsContent key={category} value={category}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -118,7 +223,7 @@ export default function AssessmentPage() {
                       <span className="text-sm font-medium">{mockProgress.modules[module.id]}%</span>
                     </div>
                     <Progress value={mockProgress.modules[module.id]} className="h-2 mb-4" />
-                    
+
                     <div className="text-sm">
                       <h4 className="font-medium mb-1">Impact Areas:</h4>
                       <div className="flex flex-wrap gap-2">
@@ -134,7 +239,7 @@ export default function AssessmentPage() {
                     <div className="text-sm text-gray-500">
                       ~{module.estimatedTimeMinutes} min to complete
                     </div>
-                    <Button 
+                    <Button
                       variant={mockProgress.modules[module.id] > 0 ? "default" : "outline"}
                     >
                       {mockProgress.modules[module.id] > 0 ? "Continue" : "Start"}
@@ -168,7 +273,7 @@ export default function AssessmentPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <div className="bg-blue-100 text-blue-800 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
                 2
@@ -180,7 +285,7 @@ export default function AssessmentPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <div className="bg-blue-100 text-blue-800 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
                 3
@@ -192,7 +297,7 @@ export default function AssessmentPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex gap-3">
               <div className="bg-blue-100 text-blue-800 h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0">
                 4

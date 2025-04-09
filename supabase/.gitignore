@@ -1,6 +1,31 @@
 # Supabase
-.branches
-.temp
+.branches/
+.temp/
+volumes/
+.env
+.env.*
+!.env.example
+
+# Local development
+*.db
+*.sqlite
+*.sqlite3
+/storage/
+
+# Generated files
+*.log
+*.pid
+*.sock
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-*
 
 # dotenvx
 .env.keys

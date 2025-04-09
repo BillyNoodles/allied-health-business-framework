@@ -46,7 +46,7 @@ import * as compliance from './compliance';
 import * as facilities from './facilities';
 import * as geography from './geography';
 import * as automation from './automation';
-import { Question } from '../../models/Question';
+import { Question } from '@/lib/models/Question';
 
 /**
  * Loads all questions from all categories
@@ -67,7 +67,7 @@ export function loadAllQuestions(): Question[] {
     ...Object.values(geography),
     ...Object.values(automation)
   ];
-  
+
   // Flatten all question arrays
   return allQuestionArrays
     .filter(item => Array.isArray(item)) // Keep only arrays

@@ -19,7 +19,7 @@ export const financialQuestions = [
 ];
 
 // Export individual question sets
-export { 
+export {
   revenueTrackingQuestions,
   pricingStrategyQuestions,
   expenseManagementQuestions,

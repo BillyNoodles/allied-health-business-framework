@@ -6,15 +6,15 @@
  * weaknesses in how the practice manages its most critical resource: time.
  */
 
-import { Question } from '../../../models/Question';
-import { QuestionType } from '../../../models/QuestionType';
-import { AssessmentCategory } from '../../../models/AssessmentCategory';
-import { DisciplineType } from '../../../models/DisciplineType';
-import { PracticeSize } from '../../../models/PracticeSize';
-import { Country } from '../../../models/Country';
-import { ScorePosition } from '../../../models/ScorePosition';
-import { SOPType } from '../../../models/SOPType';
-import { MaterialResourceType } from '../../../models/MaterialResourceType';
+import { Question } from '@/lib/models/Question';
+import { QuestionType } from '@/lib/models/QuestionType';
+import { AssessmentCategory } from '@/lib/models/AssessmentCategory';
+import { DisciplineType } from '@/lib/models/DisciplineType';
+import { PracticeSize } from '@/lib/models/PracticeSize';
+import { Country } from '@/lib/models/Country';
+import { ScorePosition } from '@/lib/models/ScorePosition';
+import { SOPType } from '@/lib/models/SOPType';
+import { MaterialResourceType } from '@/lib/models/MaterialResourceType';
 
 export const appointmentSchedulingQuestions: Question[] = [
   {

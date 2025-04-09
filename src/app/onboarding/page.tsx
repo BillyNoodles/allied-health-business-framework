@@ -33,13 +33,13 @@ export default function OnboardingPage() {
               <TabsTrigger value="details">Practice Details</TabsTrigger>
               <TabsTrigger value="specialties">Specialties</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="basic" className="space-y-4 pt-4">
               <div>
                 <Label htmlFor="practice-name">Practice Name</Label>
                 <Input id="practice-name" placeholder="Enter your practice name" className="mt-1" />
               </div>
-              
+
               <div>
                 <Label htmlFor="discipline-type">Primary Discipline</Label>
                 <Select>
@@ -55,7 +55,7 @@ export default function OnboardingPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="practice-size">Practice Size</Label>
@@ -72,14 +72,14 @@ export default function OnboardingPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="years-operation">Years in Operation</Label>
                   <Input id="years-operation" type="number" min="0" placeholder="e.g., 5" className="mt-1" />
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="details" className="space-y-4 pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -91,54 +91,54 @@ export default function OnboardingPage() {
                     <SelectContent>
                       {Object.values(Country).map((country) => (
                         <SelectItem key={country} value={country}>
-                          {country === 'US' ? 'United States' : 
-                           country === 'UK' ? 'United Kingdom' : 
-                           country === 'CA' ? 'Canada' : 
-                           country === 'AU' ? 'Australia' : 
-                           country === 'NZ' ? 'New Zealand' : 'Other'}
+                          {country === 'US' ? 'United States' :
+                            country === 'UK' ? 'United Kingdom' :
+                              country === 'CA' ? 'Canada' :
+                                country === 'AU' ? 'Australia' :
+                                  country === 'NZ' ? 'New Zealand' : 'Other'}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="state">State/Province</Label>
                   <Input id="state" placeholder="e.g., California" className="mt-1" />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="city">City</Label>
                   <Input id="city" placeholder="e.g., San Francisco" className="mt-1" />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="postal-code">Postal Code</Label>
                   <Input id="postal-code" placeholder="e.g., 94103" className="mt-1" />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="weekly-patients">Weekly Patient Volume</Label>
                   <Input id="weekly-patients" type="number" min="0" placeholder="e.g., 50" className="mt-1" />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="staff-count">Total Staff Count</Label>
                   <Input id="staff-count" type="number" min="0" placeholder="e.g., 8" className="mt-1" />
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="specialties" className="space-y-4 pt-4">
               <div>
                 <Label className="mb-2 block">Practice Specialties</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {[
-                    'Orthopedics', 'Sports Rehabilitation', 'Pediatrics', 
+                    'Orthopedics', 'Sports Rehabilitation', 'Pediatrics',
                     'Geriatrics', 'Neurology', 'Women\'s Health',
                     'Manual Therapy', 'Vestibular Rehabilitation', 'Pain Management',
                     'Post-Surgical Rehabilitation', 'Workplace Injuries', 'Chronic Conditions'
@@ -152,16 +152,16 @@ export default function OnboardingPage() {
                   ))}
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="other-specialties">Other Specialties</Label>
                 <Input id="other-specialties" placeholder="Enter any other specialties" className="mt-1" />
               </div>
-              
+
               <div>
                 <Label htmlFor="assessment-goals">Assessment Goals</Label>
-                <textarea 
-                  id="assessment-goals" 
+                <textarea
+                  id="assessment-goals"
                   className="w-full min-h-[100px] p-2 border rounded-md mt-1"
                   placeholder="What specific areas of your practice are you looking to improve?"
                 />

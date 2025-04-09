@@ -1,9 +1,7 @@
-version: "3.8"
-
 services:
   studio:
     container_name: supabase-studio
-    image: supabase/studio:20240304-6a54d30
+    image: supabase/studio:latest
     restart: unless-stopped
     ports:
       - "54324:3000"

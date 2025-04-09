@@ -151,7 +151,7 @@ export async function calculateAndSaveBusinessHealthScore(userId: string) {
 
     // Get assessment responses
     const responses = await getAssessmentResponses(userId);
-    
+
     // Convert responses to the format expected by the calculator
     const formattedResponses = responses.reduce((acc: Record<string, any>, response: any) => {
       acc[response.question.key] = response.response_value;
@@ -465,7 +465,7 @@ export async function verifyCompliance(userId: string) {
 
     // Get assessment responses
     const responses = await getAssessmentResponses(userId);
-    
+
     // Convert responses to the format expected by the verification system
     const practiceData = responses.reduce((acc: Record<string, any>, response: any) => {
       acc[response.question.key] = response.response_value;
@@ -585,7 +585,7 @@ export async function calculateFinancialHealth(userId: string) {
 
     // Get assessment responses
     const responses = await getAssessmentResponses(userId);
-    
+
     // Convert responses to the format expected by the calculator
     const formattedResponses = responses.reduce((acc: Record<string, any>, response: any) => {
       acc[response.question.key] = response.response_value;

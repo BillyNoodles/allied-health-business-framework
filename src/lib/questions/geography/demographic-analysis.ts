@@ -6,13 +6,13 @@
  * target market analysis and population-based service planning.
  */
 
-import { Question } from '../../../models/Question';
-import { QuestionType } from '../../../models/QuestionType';
-import { AssessmentCategory } from '../../../models/AssessmentCategory';
-import { DisciplineType } from '../../../models/DisciplineType';
-import { PracticeSize } from '../../../models/PracticeSize';
-import { ScorePosition } from '../../../models/ScorePosition';
-import { SOPType } from '../../../models/SOPType';
+import { Question } from '@/lib/models/Question';
+import { QuestionType } from '@/lib/models/QuestionType';
+import { AssessmentCategory } from '@/lib/models/AssessmentCategory';
+import { DisciplineType } from '@/lib/models/DisciplineType';
+import { PracticeSize } from '@/lib/models/PracticeSize';
+import { ScorePosition } from '@/lib/models/ScorePosition';
+import { SOPType } from '@/lib/models/SOPType';
 
 export const demographicAnalysisQuestions: Question[] = [
   {
